@@ -1,0 +1,977 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="description" content="How Amigos works, its design system, the game interface standard, and how it is built.">
+<link rel="icon" type="image/png" href="img/icon.png">
+<style>html{-webkit-text-size-adjust:100%}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<meta charset="utf-8">
+<title>Amigos Handbook</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: a fixed contents rail on the left, one long reading column on the right.
+   Single dark theme on purpose: the page documents a dark product and shows its
+   components on their real ground. */
+:root {
+  color-scheme: dark;
+  --ink0: #0A0B10; --ink1: #13141C; --ink2: #1C1E29; --ink3: #2A2C3A;
+  --line: rgba(255,255,255,.10); --line-strong: rgba(255,255,255,.24);
+  --text: #F4F3EE; --text2: #C9CAD6; --text3: #A6A8B8;
+  --lime: #D7FF41; --pink: #F64ADA; --violet: #8D5BFF; --violet-soft: #C7B5FF;
+  --cyan: #18CFF4; --yellow: #FFE07A; --mint: #A8F6B7; --on-accent: #0A0B10;
+  --prism: linear-gradient(45deg, #7A59F9 0%, #F64ADA 30%, #FFE07A 55%, #D7FF41 78%, #A8F6B7 100%);
+  --display: "Bricolage Grotesque", "Arial Black", system-ui, sans-serif;
+  --body: Inter, -apple-system, "Segoe UI", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+  --rail: 248px;
+}
+* { box-sizing: border-box; }
+body { background: var(--ink0); color: var(--text2); font: 16px/1.6 var(--body); margin: 0; }
+a { color: var(--lime); text-underline-offset: 3px; }
+a:focus-visible, button:focus-visible, summary:focus-visible { outline: 2px solid var(--lime); outline-offset: 3px; border-radius: 6px; }
+code { font: 0.86em var(--mono); background: var(--ink2); color: var(--text); padding: 1px 6px; border-radius: 6px; }
+pre { font: 13px/1.55 var(--mono); background: var(--ink1); border: 1px solid var(--line); border-radius: 16px; padding: 16px; overflow-x: auto; color: var(--text); margin: 0; }
+pre code { background: none; padding: 0; font-size: 1em; }
+
+.shell { display: grid; grid-template-columns: var(--rail) minmax(0, 1fr); }
+nav.rail { position: sticky; top: env(safe-area-inset-top, 0px); align-self: start; height: 100vh; overflow-y: auto; padding: 28px 12px 40px 20px; border-right: 1px solid var(--line); }
+.brand { display: flex; align-items: center; gap: 10px; font: 800 22px var(--display); color: var(--text); letter-spacing: -.02em; margin-bottom: 22px; }
+.brand svg { width: 34px; height: 32px; }
+nav.rail h6 { font: 700 11px var(--body); letter-spacing: .09em; text-transform: uppercase; color: var(--text3); margin: 20px 0 6px 10px; }
+nav.rail a { display: block; padding: 6px 10px; border-radius: 10px; color: var(--text2); text-decoration: none; font-size: 14px; font-weight: 500; }
+nav.rail a:hover { background: var(--ink2); color: var(--text); }
+nav.rail a.on { background: var(--ink2); color: var(--lime); }
+
+main { min-width: 0; padding-block: 48px 120px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.col { max-width: 880px; margin: 0 auto; display: flex; flex-direction: column; gap: 22px; }
+section { display: flex; flex-direction: column; gap: 18px; padding-top: 56px; scroll-margin-top: 12px; }
+section.first { padding-top: 0; }
+h1 { font: 800 clamp(40px, 7vw, 68px)/1 var(--display); letter-spacing: -.035em; color: var(--text); margin: 0; text-wrap: balance; }
+h2 { font: 800 clamp(28px, 4.4vw, 38px)/1.08 var(--display); letter-spacing: -.025em; color: var(--text); margin: 0; text-wrap: balance; }
+h3 { font: 700 21px/1.2 var(--display); letter-spacing: -.01em; color: var(--text); margin: 14px 0 0; }
+h4 { font: 700 13px var(--body); letter-spacing: .08em; text-transform: uppercase; color: var(--text3); margin: 8px 0 0; }
+p, ul, ol { margin: 0; max-width: 68ch; }
+ul, ol { padding-left: 20px; display: flex; flex-direction: column; gap: 6px; }
+strong { color: var(--text); font-weight: 600; }
+.lead { font-size: 19px; color: var(--text); max-width: 60ch; }
+.part { font: 700 12px var(--body); letter-spacing: .1em; text-transform: uppercase; color: var(--lime); }
+hr { border: 0; border-top: 1px solid var(--line); margin: 40px 0 0; width: 100%; }
+
+.wide { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 14.5px; min-width: 460px; }
+th { text-align: left; font: 700 11px var(--body); letter-spacing: .08em; text-transform: uppercase; color: var(--text3); padding: 8px 12px 8px 0; border-bottom: 1px solid var(--line-strong); }
+td { padding: 10px 12px 10px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+td:first-child { color: var(--text); font-weight: 600; white-space: nowrap; }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+.pill { display: inline-block; font: 700 11px var(--body); letter-spacing: .06em; text-transform: uppercase; padding: 3px 9px; border-radius: 99px; vertical-align: middle; white-space: nowrap; }
+.built { background: rgba(215,255,65,.14); color: var(--lime); }
+.sample { background: rgba(24,207,244,.14); color: var(--cyan); }
+.notbuilt { background: rgba(255,255,255,.09); color: var(--text3); }
+.unchecked { background: rgba(255,224,122,.14); color: var(--yellow); }
+
+.note { border: 1px solid var(--line); background: var(--ink1); border-radius: 16px; padding: 14px 16px; max-width: 68ch; }
+.note b { color: var(--text); }
+.note.warn { border-color: rgba(255,224,122,.35); }
+
+.shots { display: flex; gap: 16px; overflow-x: auto; padding-bottom: 6px; }
+figure { margin: 0; flex: 0 0 auto; width: 216px; display: flex; flex-direction: column; gap: 8px; }
+figure img { width: 100%; border-radius: 26px; border: 1px solid var(--line-strong); display: block; background: var(--ink1); }
+figcaption { font-size: 13px; color: var(--text3); line-height: 1.4; }
+figcaption b { color: var(--text); display: block; }
+img.full { width: 100%; border-radius: 16px; border: 1px solid var(--line); }
+
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+.sw { border: 1px solid var(--line); border-radius: 16px; overflow: hidden; background: var(--ink1); }
+.sw i { display: block; height: 68px; }
+.sw div { padding: 10px 12px 12px; font-size: 13px; line-height: 1.4; }
+.sw b { display: block; color: var(--text); font-size: 14px; }
+.sw span { font: 12px var(--mono); color: var(--text3); }
+
+.stage { background: var(--ink0); border: 1px solid var(--line); border-radius: 24px; padding: 22px; display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.stage.colm { flex-direction: column; align-items: stretch; }
+.cap { font-size: 13px; color: var(--text3); }
+
+/* Component replicas */
+.btn { font: 700 17px var(--display); height: 56px; padding: 0 24px; border-radius: 99px; border: 0; display: inline-flex; align-items: center; gap: 10px; cursor: pointer; background: var(--lime); color: var(--on-accent); transition: transform .12s; }
+.btn:active { transform: scale(.96); }
+.btn.md { height: 46px; font-size: 15px; padding: 0 20px; }
+.btn.sm { height: 36px; font-size: 14px; padding: 0 16px; }
+.btn.block { width: 100%; justify-content: space-between; max-width: 370px; }
+.btn .trail { background: var(--on-accent); color: var(--lime); font: 700 13px var(--body); padding: 8px 14px; border-radius: 99px; }
+.btn.secondary { background: transparent; color: var(--text); box-shadow: inset 0 0 0 1.5px var(--line-strong); }
+.btn.light { background: var(--text); color: var(--on-accent); }
+.btn.live { background: var(--pink); color: var(--on-accent); }
+.btn.ghost { background: var(--ink2); color: var(--text); }
+.btn.ai { background: transparent; color: var(--text); box-shadow: inset 0 0 0 1.5px var(--violet-soft); }
+.btn[disabled] { opacity: .38; cursor: default; }
+.ib { width: 44px; height: 44px; border-radius: 50%; border: 0; display: inline-grid; place-items: center; background: var(--ink2); color: var(--text); font-size: 17px; cursor: pointer; }
+.ib.light { background: var(--text); color: var(--on-accent); }
+.ib.live { background: var(--pink); color: var(--on-accent); }
+.ib.action { background: var(--lime); color: var(--on-accent); }
+.chip { font: 600 14px var(--body); height: 38px; padding: 0 14px; border-radius: 99px; background: transparent; color: var(--text); border: 0; box-shadow: inset 0 0 0 1px var(--line-strong); display: inline-flex; align-items: center; gap: 8px; cursor: pointer; }
+.chip.on { background: var(--text); color: var(--on-accent); box-shadow: none; }
+.chip .cost { color: var(--yellow); font-weight: 700; }
+.tag { font: 600 12px var(--body); padding: 4px 10px; border-radius: 8px; background: rgba(255,255,255,.12); color: var(--text); display: inline-block; }
+.tag.live { background: var(--pink); color: var(--on-accent); font-weight: 800; }
+.tag.draft { background: var(--yellow); color: var(--on-accent); font-weight: 800; letter-spacing: .06em; }
+.av { width: 40px; height: 40px; border-radius: 50%; display: inline-grid; place-items: center; font: 800 15px var(--display); color: var(--on-accent); }
+.seg { display: inline-flex; background: var(--ink2); border-radius: 14px; padding: 4px; }
+.seg button { font: 600 14px var(--body); border: 0; background: none; color: var(--text2); padding: 9px 18px; border-radius: 10px; cursor: pointer; }
+.seg button.on { background: var(--text); color: var(--on-accent); }
+.toast { background: var(--text); color: var(--on-accent); font: 600 14px var(--body); padding: 12px 18px; border-radius: 99px; display: inline-block; }
+.ainote { background: rgba(141,91,255,.16); border: 1px solid rgba(199,181,255,.4); color: var(--text); border-radius: 16px; padding: 12px 14px; font-size: 14px; max-width: 340px; }
+.card { background: var(--ink1); border: 1px solid var(--line); border-radius: 16px; padding: 14px; color: var(--text); font-size: 14px; }
+.tabbar { display: flex; align-items: center; justify-content: space-around; background: var(--ink0); border-top: 1px solid var(--line); height: 58px; width: 100%; max-width: 370px; font: 600 11px var(--body); color: var(--text3); }
+.tabbar span.on { color: var(--text); box-shadow: inset 0 3px 0 var(--lime); padding-top: 22px; }
+.tabbar span { padding-top: 22px; }
+.tabbar .plus { width: 58px; height: 40px; border-radius: 14px; background: var(--prism); color: var(--on-accent); display: grid; place-items: center; font: 800 22px var(--display); padding: 0; }
+
+.type-row { display: grid; grid-template-columns: 110px minmax(0,1fr); gap: 14px; align-items: baseline; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.type-row span { font: 12px var(--mono); color: var(--text3); }
+.type-row div { color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sp { display: flex; align-items: center; gap: 12px; font: 13px var(--mono); color: var(--text3); }
+.sp i { display: block; height: 14px; background: var(--lime); border-radius: 3px; }
+
+.checks { list-style: none; padding: 0; }
+.checks li { padding-left: 28px; position: relative; }
+.checks li::before { content: ""; position: absolute; left: 0; top: 4px; width: 16px; height: 16px; border-radius: 5px; border: 1.5px solid var(--line-strong); }
+.two { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+.do { border-top: 3px solid var(--lime); } .dont { border-top: 3px solid var(--pink); }
+.hud svg { width: 100%; max-width: 340px; height: auto; display: block; }
+.hudwrap { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 24px; align-items: start; }
+
+@media (max-width: 900px) {
+  .shell { grid-template-columns: minmax(0, 1fr); }
+  nav.rail { position: static; height: auto; border-right: 0; border-bottom: 1px solid var(--line); padding: 16px max(16px, env(safe-area-inset-right, 0px)) 14px max(16px, env(safe-area-inset-left, 0px)); }
+  nav.rail .links { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; }
+  nav.rail h6 { display: none; }
+  nav.rail a { white-space: nowrap; background: var(--ink1); }
+  .brand { margin-bottom: 12px; }
+  main { padding-block: 28px 80px; }
+  .type-row { grid-template-columns: 1fr; gap: 2px; }
+}
+@media (prefers-reduced-motion: reduce) { .btn { transition: none; } }
+</style>
+
+<div class="shell">
+<nav class="rail" aria-label="Contents">
+  <div class="brand">
+    <svg viewBox="0 0 420 390" aria-hidden="true"><defs><linearGradient id="lg" x1="0%" y1="75%" x2="100%" y2="17%"><stop offset="0" stop-color="#7A59F9"/><stop offset=".28" stop-color="#F64ADA"/><stop offset=".52" stop-color="#FFE07A"/><stop offset=".73" stop-color="#D7FF41"/><stop offset="1" stop-color="#A8F6B7"/></linearGradient></defs><path fill="url(#lg)" fill-rule="evenodd" d="M 67 140 C 64 122 80 112 96 121 L 154 156 L 206 58 C 218 37 233 38 245 60 L 283 158 L 329 130 C 348 118 366 129 363 151 L 354 275 C 352 300 338 317 316 320 L 132 344 C 87 351 66 328 65 288 Z M 110 185 L 155 212 Q 177 226 190 205 L 225 155 L 260 204 Q 279 228 299 208 L 325 190 L 318 257 Q 314 276 297 278 L 147 298 Q 127 300 121 280 C 116 256 112 212 110 185 Z"/><ellipse cx="170" cy="247" rx="14" ry="21" fill="url(#lg)"/><ellipse cx="278" cy="242" rx="13" ry="20" fill="url(#lg)"/></svg>
+    Amigos
+  </div>
+  <div class="links">
+    <h6>Start</h6>
+    <a href="#overview">Overview</a>
+    <a href="#words">Vocabulary</a>
+    <a href="#principles">Principles</a>
+    <h6>How the app works</h6>
+    <a href="#map">App map</a>
+    <a href="#loading">Loading screens</a>
+    <a href="#feed">Arcade feed</a>
+    <a href="#run">A run</a>
+    <a href="#result">Result</a>
+    <a href="#create">Create</a>
+    <a href="#live">Live</a>
+    <a href="#squad">Squad and You</a>
+    <a href="#facecam">Face cam and posted runs</a>
+    <a href="#credits">Credits</a>
+    <h6>Design system</h6>
+    <a href="#logo">Logo and icon</a>
+    <a href="#colour">Colour</a>
+    <a href="#type">Type</a>
+    <a href="#layout">Layout and grid</a>
+    <a href="#motion">Motion, haptics, sound</a>
+    <a href="#icons">Icons</a>
+    <a href="#components">Components</a>
+    <h6>Game interface</h6>
+    <a href="#hud">The HUD standard</a>
+    <a href="#slots">Slots</a>
+    <a href="#controls">Controls</a>
+    <a href="#limits">Limits and checklist</a>
+    <h6>Technical</h6>
+    <a href="#architecture">Architecture</a>
+    <a href="#dna">Game DNA</a>
+    <a href="#engine">Engine and sound</a>
+    <a href="#recording">Recording</a>
+    <a href="#project">Project and build</a>
+    <h6>Where it stands</h6>
+    <a href="#status">Status</a>
+    <a href="#decisions">Open decisions</a>
+  </div>
+</nav>
+
+<main><div class="col">
+
+<section class="first" id="overview">
+  <div class="part">Handbook · 11 November 2026</div>
+  <h1>A feed of games you can play</h1>
+  <p class="lead">Amigos is a social app shaped like a short-video feed, where every item is a game. You swipe, play, chase your friends' scores, watch each other, and make your own games by describing them.</p>
+  <p>This handbook explains how the app works, how it is designed, and how it is built. It is written for three readers:</p>
+  <ul>
+    <li><strong>Anyone who wants to understand the product.</strong> Read "How the app works".</li>
+    <li><strong>Designers.</strong> Read "Design system" and "Game interface".</li>
+    <li><strong>Engineers and AI assistants.</strong> Read "Game interface" and "Technical". The same rules are in the repository as <code>CLAUDE.md</code> and <code>docs/GAME-INTERFACE.md</code>.</li>
+  </ul>
+  <div class="note warn"><b>This is a prototype.</b> It is a native iPhone app that shows the whole experience with sample data. There is no server, no accounts and no real AI generation yet. Each part below is marked so the plan is never mistaken for the product:
+    <span class="pill built">Built</span> works in the app ·
+    <span class="pill sample">Sample data</span> works, with made-up people and numbers ·
+    <span class="pill unchecked">Unchecked</span> written but never confirmed on a phone ·
+    <span class="pill notbuilt">Not built</span> designed or planned only.
+  </div>
+</section>
+
+<section id="words">
+  <h2>Vocabulary</h2>
+  <div class="wide"><table>
+    <tr><th>Word</th><th>Meaning</th></tr>
+    <tr><td>Cade</td><td>One game in the feed.</td></tr>
+    <tr><td>ReCade</td><td>Your own version of someone else's Cade. The original creator stays credited.</td></tr>
+    <tr><td>Run</td><td>One attempt at a Cade.</td></tr>
+    <tr><td>Game DNA</td><td>The settings that define a Cade: type, look, what falls, speed, lives.</td></tr>
+    <tr><td>Look</td><td>Colour and light only. Changing it never changes rules or scores.</td></tr>
+    <tr><td>Credits</td><td>What creating costs. Everyone starts with 100.</td></tr>
+    <tr><td>Squad</td><td>Your friends.</td></tr>
+    <tr><td>Face cam</td><td>Filming yourself with the front camera while you play.</td></tr>
+    <tr><td>Posted run</td><td>A filmed run shared to the feed as its own page.</td></tr>
+    <tr><td>HUD</td><td>The interface drawn over a game: score, lives, progress, controls.</td></tr>
+  </table></div>
+  <p class="cap">"Cade" and "ReCade" come from the app's earlier name, Tokcade. Whether to rename them is an <a href="#decisions">open decision</a>.</p>
+</section>
+
+<section id="principles">
+  <h2>Principles</h2>
+  <ul>
+    <li><strong>The preview is the game.</strong> A feed card is the real game playing itself. There is no trailer.</li>
+    <li><strong>Retrying is one tap.</strong> "Again" is the first button after every run.</li>
+    <li><strong>You chase the next person, not a distant record.</strong> The interface always names who is just ahead.</li>
+    <li><strong>Making starts from an idea.</strong> Never from technical settings or prompt-writing skill.</li>
+    <li><strong>Looks are free. Rules cost credits.</strong></li>
+    <li><strong>Honest about limits.</strong> Game types the engine cannot make are marked "Soon", not faked.</li>
+    <li><strong>One interface for every game.</strong> Graphics change; the place for score, lives and controls does not.</li>
+  </ul>
+</section>
+
+<hr>
+
+<section id="map">
+  <div class="part">How the app works</div>
+  <h2>App map</h2>
+  <p>Five tabs sit at the bottom. The middle one opens the create flow over whatever you are doing.</p>
+  <div class="wide"><table>
+    <tr><th>Tab</th><th>What it is for</th><th>State</th></tr>
+    <tr><td>Arcade</td><td>The feed. Swipe between games and posted runs, play any of them.</td><td><span class="pill sample">Sample data</span></td></tr>
+    <tr><td>Live</td><td>Watch someone's run as it happens.</td><td><span class="pill sample">Sample data</span></td></tr>
+    <tr><td>Create (+)</td><td>Describe a game, adjust it, test it, publish it.</td><td><span class="pill built">Built</span></td></tr>
+    <tr><td>Squad</td><td>Friends, challenges and a weekly league.</td><td><span class="pill sample">Sample data</span></td></tr>
+    <tr><td>You</td><td>Your games, best scores and credits.</td><td><span class="pill built">Built</span></td></tr>
+  </table></div>
+  <p>A run takes over the screen: the tab bar and the feed's own controls step aside until you leave.</p>
+</section>
+
+<section id="loading">
+  <h2>Loading screens <span class="pill built">Built</span></h2>
+  <p>Each launch shows one of six loading screens, each drawn in the style of a different era of games and each with its own short tune. The same style never appears twice in a row. It lasts 2.6 seconds; a tap skips it. Tapping the logo in the feed replays one.</p>
+  <img class="full" src="img/loading.jpg" alt="Six loading screens side by side: coin-op, home computer, eighties neon, vector, pocket console and present day">
+  <p class="cap">Left to right: coin-op, home computer, eighties neon, vector, pocket console, present day. <span class="pill unchecked">Unchecked</span> the tunes and the animations in motion.</p>
+</section>
+
+<section id="feed">
+  <h2>Arcade feed <span class="pill sample">Sample data</span></h2>
+  <div class="shots">
+    <figure><img src="img/feed.jpg" alt="A feed card for the game Taco Storm with a Play button"><figcaption><b>A feed card</b>The game is already running behind the text.</figcaption></figure>
+  </div>
+  <p>The feed is a stack of full-screen pages. Swipe up for the next one. Each game page shows:</p>
+  <ul>
+    <li><strong>The game itself</strong>, replaying the top scorer's run, silently.</li>
+    <li><strong>Who made it</strong>, its tags, title and how many times it has been played.</li>
+    <li><strong>The score to beat</strong> and the latest comment.</li>
+    <li><strong>A side rail:</strong> follow the creator, like, comment, ReCade, share.</li>
+    <li><strong>Play</strong>, the one wide button, with the score to beat on it.</li>
+    <li><strong>The camera button</strong> beside Play, which turns <a href="#facecam">face cam</a> on or off for your next run.</li>
+  </ul>
+  <p>Double-tap the game to like it. Only the page you are looking at runs its game; the others are paused.</p>
+  <p>The tabs at the top (Following, For you, Live) are in place, but both lists show the same five sample games.</p>
+</section>
+
+<section id="run">
+  <h2>A run <span class="pill built">Built</span></h2>
+  <div class="shots">
+    <figure><img src="img/run.jpg" alt="A run in progress with score, lives and a progress bar"><figcaption><b>In a run</b>Score, lives, and who you are about to pass.</figcaption></figure>
+    <figure><img src="img/over.jpg" alt="The run over card with an Again button"><figcaption><b>Run over</b>Retry is the first button.</figcaption></figure>
+  </div>
+  <p>Tapping Play does not open a new screen. The card's text slides away and the same game is handed to you. The feed cannot be swiped during a run; you leave with the close button.</p>
+  <ul>
+    <li><strong>Top:</strong> score in the middle, lives on the right, close on the left.</li>
+    <li><strong>Progress bar:</strong> fills as you score. Ticks mark other players (friends in cyan). The caption names the next person and the gap.</li>
+    <li><strong>Passing someone</strong> gets a sound, a haptic buzz and a "Passed ravi" callout.</li>
+    <li><strong>Bottom:</strong> who is watching, a mute button, and a recording indicator when face cam is on.</li>
+  </ul>
+  <p>Two game types exist. <strong>Dodge:</strong> drag anywhere to steer; things fall; you have lives. <strong>Stack:</strong> tap to drop a sliding block; whatever overhangs is cut off; one miss ends it.</p>
+  <p>The layout of everything drawn over a game is fixed by the <a href="#hud">HUD standard</a>.</p>
+</section>
+
+<section id="result">
+  <h2>Result <span class="pill sample">Sample data</span></h2>
+  <div class="shots">
+    <figure><img src="img/result.jpg" alt="The result screen with a ranked list around the player"><figcaption><b>Result</b>The top score, then the people right around you.</figcaption></figure>
+  </div>
+  <p>The result comes in two steps so that retrying stays instant:</p>
+  <ol>
+    <li><strong>The "Run over" card</strong> appears the moment you lose: your score, the gap to the next person, and "Again".</li>
+    <li><strong>"See how you ranked"</strong> opens the full result: your rank, the people just above and below you, and buttons to play again, challenge a friend or ReCade the game.</li>
+  </ol>
+  <p>If the run was filmed, both steps offer to watch the clip or post it. Without a film, the result shows a placeholder "closest call" clip that is not real. <span class="pill unchecked">Unchecked</span> the full result, comments and ReCade were not reopened after the move from the web prototype.</p>
+</section>
+
+<section id="create">
+  <h2>Create <span class="pill built">Built</span></h2>
+  <div class="shots">
+    <figure><img src="img/create-idea.jpg" alt="Create step one: describe your idea"><figcaption><b>1. Idea</b>Type it, or tap "Surprise me", or pick a type.</figcaption></figure>
+    <figure><img src="img/create-plan.jpg" alt="Create step two: the plan"><figcaption><b>2. Plan</b>What the app picked. Change anything.</figcaption></figure>
+    <figure><img src="img/create-build.jpg" alt="Create step three: building"><figcaption><b>3. Build</b>Rules, art, then a play check.</figcaption></figure>
+    <figure><img src="img/create-test.jpg" alt="Create step four: play-test"><figcaption><b>4. Test</b>Play it. Ask for changes.</figcaption></figure>
+    <figure><img src="img/create-publish.jpg" alt="Create step five: publish"><figcaption><b>5. Publish</b>Name it and choose who can play.</figcaption></figure>
+  </div>
+  <p>Making a game takes five steps and needs no knowledge of games.</p>
+  <div class="wide"><table>
+    <tr><th>Step</th><th>What you do</th><th>What it costs</th></tr>
+    <tr><td>Idea</td><td>Say what the game is about. The app reads the idea and tells you what it understood.</td><td>Nothing</td></tr>
+    <tr><td>Plan</td><td>Review five choices: what players do, controls, difficulty, look, goal. Tap any to change it.</td><td>Nothing</td></tr>
+    <tr><td>Build</td><td>Watch it come together. Credits are held, and charged only if the play check passes.</td><td>10 credits</td></tr>
+    <tr><td>Test</td><td>Play your game. Ask for changes with one tap: faster, slower, another look.</td><td>2 per rule change; looks are free</td></tr>
+    <tr><td>Publish</td><td>Title, a dare, who can play, whether others may ReCade it.</td><td>Nothing</td></tr>
+  </table></div>
+  <p>The published game appears at the top of the feed and on your profile. ReCade opens the same flow starting from an existing game.</p>
+  <div class="note"><b>What is real here.</b> The flow, the choices and the resulting playable game are real. Reading the idea is keyword matching, and "building" is a timed animation, not AI generation. <span class="pill notbuilt">Not built</span> real generation, voice input, the failed-build and out-of-credits states.</div>
+</section>
+
+<section id="live">
+  <h2>Live <span class="pill sample">Sample data</span></h2>
+  <div class="shots">
+    <figure><img src="img/live-a.jpg" alt="Live in Watch mode, almost all game"><figcaption><b>Watch</b>Nearly all game. One line of chat.</figcaption></figure>
+    <figure><img src="img/live-b.jpg" alt="Live in Join in mode with chat and a prediction"><figcaption><b>Join in</b>Chat, a prediction, and a text field.</figcaption></figure>
+  </div>
+  <p>Live shows someone's run as it happens. It has two modes, and tapping the game switches between them:</p>
+  <ul>
+    <li><strong>Watch</strong> gives the screen to the game.</li>
+    <li><strong>Join in</strong> brings up the chat, a prediction ("Will juno pass 2 600?") and a field to type in.</li>
+  </ul>
+  <p>The panels fly in and out like a game interface, with a sound. The app remembers which mode you left it in. "Play it" in the corner takes you to the same game. The run and the chat are scripted; nothing is streamed.</p>
+</section>
+
+<section id="squad">
+  <h2>Squad and You <span class="pill sample">Sample data</span></h2>
+  <div class="shots">
+    <figure><img src="img/squad.jpg" alt="The Squad tab with friends, challenges and a league"><figcaption><b>Squad</b>Who is playing, what is waiting on you, the weekly league.</figcaption></figure>
+    <figure><img src="img/you.jpg" alt="The You tab with profile counts"><figcaption><b>You</b>Your games, best scores, credits.</figcaption></figure>
+  </div>
+  <p><strong>Squad</strong> shows friends who are playing right now, challenges that drop you straight into a run ("Take it back"), and a league that resets each Monday.</p>
+  <p><strong>You</strong> lists what you published and your best score on each game you played. The palette button at the top left opens the design system as rendered by the app, and holds the hidden <a href="#hud">zone overlay</a> switch.</p>
+</section>
+
+<section id="facecam">
+  <h2>Face cam and posted runs <span class="pill unchecked">Unchecked</span></h2>
+  <div class="shots">
+    <figure><img src="img/zones.jpg" alt="A run with the face cam bubble at the top right and a Recording indicator, with layout zones outlined"><figcaption><b>Filming a run</b>The bubble at the top right is your camera. This shot also shows the developer zone overlay.</figcaption></figure>
+  </div>
+  <p>Face cam lets you film yourself and talk while you play, the way streamers do.</p>
+  <ol>
+    <li>Turn on the camera button beside Play. It turns pink.</li>
+    <li>Tap Play. The first time, iOS asks for the camera, then for screen recording and the microphone.</li>
+    <li>Your face shows in a bubble over the game. Drag it out of the way if you need to.</li>
+    <li>When the run ends, filming continues for 1.6 seconds to catch your reaction, then the clip is saved.</li>
+    <li>On the "Run over" card, <strong>Watch</strong> the clip or <strong>Post to feed</strong>.</li>
+  </ol>
+  <p>A posted run becomes its own page at the top of your feed: the recording plays full screen with sound, under your name, the score, the game's title, and a Play button that opens that game with your score as the one to beat. Posted runs stay after you close the app.</p>
+  <div class="note warn"><b>Not yet confirmed.</b> The simulator used for testing has no camera and cannot record. On it, the toggle, the permission prompt, the bubble and the feed page (with a stand-in video) all worked. Whether your face and voice end up in the saved clip has only been testable on a real phone and has not been reported back.</div>
+  <p><span class="pill notbuilt">Not built</span> streaming your camera live to viewers; other people seeing your posted runs (they are stored on your phone only); a clean video without the score bar in it.</p>
+</section>
+
+<section id="credits">
+  <h2>Credits <span class="pill built">Built</span></h2>
+  <div class="wide"><table>
+    <tr><th>Action</th><th class="num">Credits</th></tr>
+    <tr><td>Starting balance</td><td class="num">100</td></tr>
+    <tr><td>Generate a new game or a ReCade</td><td class="num">10</td></tr>
+    <tr><td>Change a rule (speed, lives)</td><td class="num">2</td></tr>
+    <tr><td>Change the look</td><td class="num">0</td></tr>
+    <tr><td>Publish, play, like, comment</td><td class="num">0</td></tr>
+  </table></div>
+  <p>Credits are never taken for a build that fails its play check. How credits are bought, refilled or earned is undecided, and the balance resets to 100 when the app restarts.</p>
+</section>
+
+<hr>
+
+<section id="logo">
+  <div class="part">Design system</div>
+  <h2>Logo and icon</h2>
+  <p>The symbol is a crown with a face: play, winning, and a friend looking back at you. It always carries the brand gradient.</p>
+  <div class="stage" style="gap:28px">
+    <svg viewBox="0 0 420 390" width="150" role="img" aria-label="Amigos symbol"><path fill="url(#lg)" fill-rule="evenodd" d="M 67 140 C 64 122 80 112 96 121 L 154 156 L 206 58 C 218 37 233 38 245 60 L 283 158 L 329 130 C 348 118 366 129 363 151 L 354 275 C 352 300 338 317 316 320 L 132 344 C 87 351 66 328 65 288 Z M 110 185 L 155 212 Q 177 226 190 205 L 225 155 L 260 204 Q 279 228 299 208 L 325 190 L 318 257 Q 314 276 297 278 L 147 298 Q 127 300 121 280 C 116 256 112 212 110 185 Z"/><ellipse cx="170" cy="247" rx="14" ry="21" fill="url(#lg)"/><ellipse cx="278" cy="242" rx="13" ry="20" fill="url(#lg)"/></svg>
+    <img src="img/icon.png" alt="Amigos app icon" width="130" style="border-radius:29px">
+    <svg viewBox="0 0 420 390" width="64" role="img" aria-label="Symbol in one colour"><path fill="#F4F3EE" fill-rule="evenodd" d="M 67 140 C 64 122 80 112 96 121 L 154 156 L 206 58 C 218 37 233 38 245 60 L 283 158 L 329 130 C 348 118 366 129 363 151 L 354 275 C 352 300 338 317 316 320 L 132 344 C 87 351 66 328 65 288 Z M 110 185 L 155 212 Q 177 226 190 205 L 225 155 L 260 204 Q 279 228 299 208 L 325 190 L 318 257 Q 314 276 297 278 L 147 298 Q 127 300 121 280 C 116 256 112 212 110 185 Z"/><ellipse cx="170" cy="247" rx="14" ry="21" fill="#F4F3EE"/><ellipse cx="278" cy="242" rx="13" ry="20" fill="#F4F3EE"/></svg>
+  </div>
+  <p class="cap">Symbol, app icon, and the one-colour version used small (the feed's top-left corner).</p>
+  <div class="two">
+    <div class="card do"><b>Do</b><ul style="margin-top:8px"><li>Use the gradient symbol on the ink ground.</li><li>Use warm white when it is smaller than 28 points or sits over a game.</li><li>Keep clear space of half the symbol's width on every side.</li></ul></div>
+    <div class="card dont"><b>Don't</b><ul style="margin-top:8px"><li>Recolour it with a single accent.</li><li>Place the gradient version over a busy game.</li><li>Stretch, rotate, outline or add a shadow.</li></ul></div>
+  </div>
+  <p>In code: <code>TKLogo(size:)</code> draws it; <code>TKLogoShape</code> is the outline. The app icon is drawn by a script, <code>ios/Tools/make-icon.swift</code>, in standard, dark and tinted versions.</p>
+</section>
+
+<section id="colour">
+  <h2>Colour</h2>
+  <p>The ground is a near-black ink with three raised steps. Text is a warm white with two dimmer steps. Accents come from the gradient in the symbol.</p>
+  <h3>Roles</h3>
+  <p>Components never pick a raw hue. They pick a role, so a colour always means the same thing.</p>
+  <div class="grid">
+    <div class="sw"><i style="background:#D7FF41"></i><div><b>Action</b>The one thing to tap<br><span>lime #D7FF41</span></div></div>
+    <div class="sw"><i style="background:#F64ADA"></i><div><b>Live</b>Live, likes, lives, recording<br><span>pink #F64ADA</span></div></div>
+    <div class="sw"><i style="background:#8D5BFF"></i><div><b>Create</b>Making and ReCade<br><span>violet #8D5BFF</span></div></div>
+    <div class="sw"><i style="background:#18CFF4"></i><div><b>Social</b>Friends, multiplayer<br><span>cyan #18CFF4</span></div></div>
+    <div class="sw"><i style="background:#FFE07A"></i><div><b>Score</b>Scores, crowns, warnings<br><span>yellow #FFE07A</span></div></div>
+    <div class="sw"><i style="background:var(--prism)"></i><div><b>Prism</b>Brand moments only<br><span>5-stop gradient</span></div></div>
+  </div>
+  <p><strong>Prism</strong> is reserved for the create button, the logo, the profile ring and the icon. Stops: <code>#7A59F9</code> 0%, <code>#F64ADA</code> 30%, <code>#FFE07A</code> 55%, <code>#D7FF41</code> 78%, <code>#A8F6B7</code> 100%, running from bottom-left to top-right.</p>
+  <h3>Ground and text</h3>
+  <div class="grid">
+    <div class="sw"><i style="background:#0A0B10"></i><div><b>ink0</b>App background<br><span>#0A0B10</span></div></div>
+    <div class="sw"><i style="background:#13141C"></i><div><b>ink1</b>Card, sheet<br><span>#13141C</span></div></div>
+    <div class="sw"><i style="background:#1C1E29"></i><div><b>ink2</b>Raised control<br><span>#1C1E29</span></div></div>
+    <div class="sw"><i style="background:#2A2C3A"></i><div><b>ink3</b>Hairline on raised<br><span>#2A2C3A</span></div></div>
+    <div class="sw"><i style="background:#F4F3EE"></i><div><b>text</b>Primary text<br><span>#F4F3EE</span></div></div>
+    <div class="sw"><i style="background:#C9CAD6"></i><div><b>text2</b>Secondary<br><span>#C9CAD6</span></div></div>
+    <div class="sw"><i style="background:#A6A8B8"></i><div><b>text3</b>Captions, labels<br><span>#A6A8B8</span></div></div>
+    <div class="sw"><i style="background:rgba(10,11,16,.55);border-bottom:1px solid var(--line)"></i><div><b>glass</b>Over a game<br><span>ink0 at 55%</span></div></div>
+  </div>
+  <p>Lines are white at 10% (<code>line</code>) and 24% (<code>lineStrong</code>). Text on any accent is ink (<code>onAccent</code>), never white.</p>
+  <h3>Looks</h3>
+  <p>A look is the colour scheme of a game. It is separate from the interface palette and never recolours the interface. Seven exist:</p>
+  <div class="grid">
+    <div class="sw"><i style="background:radial-gradient(circle at 80% 10%,#D31CD9aa,transparent 60%),radial-gradient(circle at 10% 100%,#10A8F9aa,transparent 60%),#0A0B10"></i><div><b>Deep Space</b><span>space</span></div></div>
+    <div class="sw"><i style="background:radial-gradient(circle at 80% 10%,#F64ADAaa,transparent 60%),radial-gradient(circle at 10% 100%,#8D5BFFaa,transparent 60%),#2A1440"></i><div><b>Candy Pop</b><span>candy</span></div></div>
+    <div class="sw"><i style="background:radial-gradient(circle at 80% 10%,#18CFF4aa,transparent 60%),radial-gradient(circle at 10% 100%,#F64ADAaa,transparent 60%),#070A1C"></i><div><b>Neon Nights</b><span>neon</span></div></div>
+    <div class="sw"><i style="background:radial-gradient(circle at 80% 10%,#FF6A3Daa,transparent 60%),radial-gradient(circle at 10% 100%,#F64ADAaa,transparent 60%),#3A1B1E"></i><div><b>Sunset</b><span>sunset</span></div></div>
+    <div class="sw"><i style="background:radial-gradient(circle at 80% 10%,#3F8F52aa,transparent 60%),radial-gradient(circle at 10% 100%,#D7FF4166,transparent 60%),#0B1A0E"></i><div><b>Retro CRT</b><span>crt</span></div></div>
+    <div class="sw"><i style="background:radial-gradient(circle at 80% 10%,#8FD8F2aa,transparent 60%),radial-gradient(circle at 10% 100%,#18CFF4aa,transparent 60%),#0C1E2E"></i><div><b>Ice World</b><span>ice</span></div></div>
+    <div class="sw"><i style="background:radial-gradient(circle at 80% 10%,#6B6C78aa,transparent 60%),radial-gradient(circle at 10% 100%,#3A3C4Aaa,transparent 60%),#15151A"></i><div><b>Mono</b><span>mono</span></div></div>
+  </div>
+</section>
+
+<section id="type">
+  <h2>Type</h2>
+  <p>Two faces. <strong>Bricolage Grotesque</strong> (weight 800, bundled as a variable font, SIL Open Font License) for titles, scores and main buttons. The <strong>iOS system font</strong> for everything you read. This page uses Inter in its place.</p>
+  <div>
+    <div class="type-row"><span>score · 88</span><div style="font:800 clamp(52px,12vw,88px)/1 var(--display);letter-spacing:-2.6px">1,460</div></div>
+    <div class="type-row"><span>hero · 44</span><div style="font:800 44px/1.05 var(--display);letter-spacing:-1.3px">Taco Storm</div></div>
+    <div class="type-row"><span>title · 34</span><div style="font:800 34px/1.1 var(--display);letter-spacing:-.9px">Taco Storm</div></div>
+    <div class="type-row"><span>h1 · 30</span><div style="font:800 30px/1.1 var(--display);letter-spacing:-.6px">Taco Storm</div></div>
+    <div class="type-row"><span>h2 · 20</span><div style="font:800 20px/1.2 var(--display)">Taco Storm</div></div>
+    <div class="type-row"><span>bodyLarge · 17</span><div style="font:400 17px var(--body)">The last ten seconds are evil</div></div>
+    <div class="type-row"><span>body · 15</span><div style="font:400 15px var(--body)">The last ten seconds are evil</div></div>
+    <div class="type-row"><span>small · 13</span><div style="font:400 13px var(--body);color:var(--text3)">Nothing is spent until you generate.</div></div>
+    <div class="type-row"><span>label · 12</span><div style="font:700 12px var(--body);letter-spacing:.08em;text-transform:uppercase;color:var(--text3)">Your move</div></div>
+  </div>
+  <ul>
+    <li>Apply a style with <code>.tkText(.title)</code>. For other sizes use <code>TKFont.display(size)</code> or <code>TKFont.body(size, weight:)</code>.</li>
+    <li>Display sizes tighten their letter-spacing as they grow. The styles do this for you.</li>
+    <li>Numbers that change (scores, credits) use fixed-width digits so they do not jiggle.</li>
+    <li>Nothing is set smaller than 12 points; nothing smaller than 11 on a button label.</li>
+  </ul>
+</section>
+
+<section id="layout">
+  <h2>Layout and grid</h2>
+  <p>Everything sits on a 4-point grid. One side margin, 16, is used on every screen.</p>
+  <div class="stage colm">
+    <div class="sp"><i style="width:4px"></i>s1 · 4</div>
+    <div class="sp"><i style="width:8px"></i>s2 · 8</div>
+    <div class="sp"><i style="width:12px"></i>s3 · 12</div>
+    <div class="sp"><i style="width:16px"></i>s4 · 16 · also <b style="color:var(--text)">gutter</b>, the side margin</div>
+    <div class="sp"><i style="width:20px"></i>s5 · 20</div>
+    <div class="sp"><i style="width:24px"></i>s6 · 24</div>
+    <div class="sp"><i style="width:32px"></i>s8 · 32</div>
+    <div class="sp"><i style="width:40px"></i>s10 · 40</div>
+  </div>
+  <div class="wide"><table>
+    <tr><th>Token</th><th class="num">Value</th><th>Use</th></tr>
+    <tr><td>TKRadius.sm</td><td class="num">10</td><td>Tags, small tiles</td></tr>
+    <tr><td>TKRadius.md</td><td class="num">16</td><td>Cards, notes</td></tr>
+    <tr><td>TKRadius.lg</td><td class="num">24</td><td>Text areas, large cards</td></tr>
+    <tr><td>TKRadius.xl</td><td class="num">32</td><td>Sheets, the run over card (28)</td></tr>
+    <tr><td>Capsule</td><td class="num">full</td><td>Buttons, chips, pills</td></tr>
+    <tr><td>TKSize.hit</td><td class="num">44</td><td>Smallest touch target, even when the visible control is smaller</td></tr>
+    <tr><td>TKSize.tabBar</td><td class="num">58</td><td>Tab bar height, above the home indicator</td></tr>
+  </table></div>
+  <h3>Screen structure</h3>
+  <ul>
+    <li><strong>Portrait only</strong>, one column, full width. Reference screen: 402 × 874 points. Smallest supported: 375 × 667.</li>
+    <li><strong>Full-bleed content</strong> (games, video) runs edge to edge behind everything. Text and controls stay inside the safe area and the 16-point margins.</li>
+    <li><strong>A dark fade</strong> sits behind text placed over a game, so it reads on any look.</li>
+    <li><strong>One primary action per screen</strong>, lime, full width, at the bottom where the thumb rests.</li>
+    <li><strong>Sheets</strong> rise from the bottom for secondary tasks (comments, look picker). Full-screen covers are for flows (create, a clip).</li>
+    <li><strong>Grids</strong> inside a screen use 8 or 10 points between tiles: three columns for type tiles, two for plan cards.</li>
+  </ul>
+</section>
+
+<section id="motion">
+  <h2>Motion, haptics, sound</h2>
+  <h3>Three springs</h3>
+  <div class="wide"><table>
+    <tr><th>Name</th><th class="num">Response</th><th class="num">Damping</th><th>Use</th></tr>
+    <tr><td>snappy</td><td class="num">0.26 s</td><td class="num">0.86</td><td>Buttons and small controls</td></tr>
+    <tr><td>soft</td><td class="num">0.42 s</td><td class="num">0.86</td><td>Sheets, screens, text sliding in and out</td></tr>
+    <tr><td>bouncy</td><td class="num">0.38 s</td><td class="num">0.56</td><td>Celebration: a like, passing someone, "Go"</td></tr>
+  </table></div>
+  <p>All motion uses one of these (<code>TKMotion.snappy</code> and so on), so the feel of the app can be retuned in one file.</p>
+  <h3>Signature transitions</h3>
+  <ul>
+    <li><strong>HUD entrance</strong> (<code>.tkHud</code>): a piece flies in from an edge, small and out of focus, then lands sharp. Neighbours get rising delays so they cascade. Used when game interface arrives or leaves.</li>
+    <li><strong>Sweep</strong> (<code>.tkSweep</code>): a line draws outward from its centre.</li>
+    <li><strong>Press:</strong> every button shrinks slightly under the finger and gives a light tap.</li>
+    <li><strong>Play:</strong> the card's text fades and drops away; the game stays exactly where it was.</li>
+  </ul>
+  <h3>Haptics</h3>
+  <div class="wide"><table>
+    <tr><th>Pattern</th><th>When</th></tr>
+    <tr><td>tap</td><td>Any button press</td></tr>
+    <tr><td>select</td><td>Switching a tab, chip or segment</td></tr>
+    <tr><td>thud</td><td>A block landing in a stack game</td></tr>
+    <tr><td>success</td><td>Passing someone, a new best, a like</td></tr>
+    <tr><td>fail</td><td>Something refused</td></tr>
+    <tr><td>hit()</td><td>Losing a life: one sharp knock with a short rumble</td></tr>
+    <tr><td>death()</td><td>The run ending: a heavier, longer falling pattern</td></tr>
+  </table></div>
+  <h3>Sound</h3>
+  <p>No audio files are bundled. Every sound is built from the game's own settings, so each game sounds like itself, including games made later.</p>
+  <ul>
+    <li>The <strong>look</strong> picks the instrument and scale.</li>
+    <li>The <strong>falling object</strong> picks the hit sound.</li>
+    <li>The <strong>game type</strong> picks which moments sound. In a stack game each block plays a note that climbs with the tower.</li>
+    <li>Sound plays only during a run, on loading screens and when Live panels move. The feed is silent.</li>
+    <li>It follows the ring/silent switch and mixes with your own music. A mute button sits in every run.</li>
+  </ul>
+  <p><span class="pill unchecked">Unchecked</span> nobody has yet confirmed how the sounds and haptics feel on a phone.</p>
+</section>
+
+<section id="icons">
+  <h2>Icons</h2>
+  <p>Icons are Apple's SF Symbols, named in one list (<code>TKIcon</code>) so a screen never reaches for a symbol by its raw name. Draw them with <code>TKIconView(.heart, size: 17)</code>.</p>
+  <div class="wide"><table>
+    <tr><th>Group</th><th>Names</th></tr>
+    <tr><td>Feed actions</td><td><code>play</code> <code>heart</code> <code>heartLine</code> <code>comment</code> <code>recade</code> <code>share</code> <code>search</code></td></tr>
+    <tr><td>Navigation</td><td><code>close</code> <code>chevronLeft</code> <code>chevronRight</code> <code>chevronUp</code> <code>chevronDown</code> <code>undo</code> <code>send</code> <code>plus</code></td></tr>
+    <tr><td>Tabs</td><td><code>gamepad</code> <code>gamepadFill</code> <code>live</code> <code>users</code> <code>usersFill</code> <code>user</code> <code>userFill</code></td></tr>
+    <tr><td>Status</td><td><code>crown</code> <code>eye</code> <code>bolt</code> <code>check</code> <code>alert</code> <code>bell</code> <code>sparkle</code></td></tr>
+    <tr><td>Media</td><td><code>sound</code> <code>soundOff</code> <code>mic</code> <code>camera</code> <code>cameraOff</code></td></tr>
+    <tr><td>Game types</td><td><code>dodge</code> <code>stack</code> <code>jump</code> <code>race</code> <code>solve</code> <code>quiz</code></td></tr>
+    <tr><td>Other</td><td><code>palette</code> <code>trash</code></td></tr>
+  </table></div>
+  <p>Sizes: 17 in the side rail, 18 in an icon button, 11 to 12 inside a label. Filled symbols mean "on" or "selected"; outlined mean "off".</p>
+</section>
+
+<section id="components">
+  <h2>Components</h2>
+  <p>These are redrawn here in HTML to show their look and rules. The real ones are SwiftUI views in the <code>AmigosDS</code> package, and the app renders them on its own design-system screen.</p>
+
+  <h3>Button <code>TKButton</code></h3>
+  <div class="stage">
+    <button class="btn block" type="button"><span>▶ Play</span><span class="trail">Beat 2 480</span></button>
+  </div>
+  <div class="stage">
+    <button class="btn" type="button">Primary</button>
+    <button class="btn secondary" type="button">Secondary</button>
+    <button class="btn light" type="button">Light</button>
+    <button class="btn live" type="button">Live</button>
+    <button class="btn ai" type="button">ReCade</button>
+    <button class="btn ghost" type="button">Ghost</button>
+    <button class="btn" type="button" disabled>Disabled</button>
+  </div>
+  <div class="stage">
+    <button class="btn" type="button">Large · 56</button>
+    <button class="btn md" type="button">Medium · 46</button>
+    <button class="btn sm" type="button">Small · 36</button>
+  </div>
+  <div class="wide"><table>
+    <tr><th>Variant</th><th>Use</th></tr>
+    <tr><td>primary</td><td>The main action of a screen. One per screen.</td></tr>
+    <tr><td>secondary</td><td>The alternative beside or under a primary.</td></tr>
+    <tr><td>light</td><td>A positive action that is not the main one (Follow, Watch).</td></tr>
+    <tr><td>live</td><td>Anything live or filmed (Watch live, Post to feed).</td></tr>
+    <tr><td>ai</td><td>Making and ReCade.</td></tr>
+    <tr><td>ghost</td><td>Cancel and other quiet exits.</td></tr>
+  </table></div>
+  <p>Options: an icon before the title; <code>block</code> for full width; a <strong>trail</strong>, the dark pill at the right end that carries the stake ("Beat 2 480", a credit cost). Labels are verbs, one to three words.</p>
+
+  <h3>Icon button <code>TKIconButton</code></h3>
+  <div class="stage">
+    <button class="ib" type="button" aria-label="Solid">✕</button>
+    <button class="ib light" type="button" aria-label="Light">●</button>
+    <button class="ib live" type="button" aria-label="Live">♥</button>
+    <button class="ib action" type="button" aria-label="Action">＋</button>
+  </div>
+  <p>44 points across by default; 54 beside a large button. Variants: glass (over a game), solid, light, plain, action, live. Every one needs a spoken label for VoiceOver.</p>
+
+  <h3>Chip, tag, avatar</h3>
+  <div class="stage">
+    <button class="chip" type="button">✦ Surprise me</button>
+    <button class="chip on" type="button">Dodge</button>
+    <button class="chip" type="button">Make it faster <span class="cost">ϟ 2</span></button>
+    <span class="tag">60 sec</span><span class="tag live">LIVE</span><span class="tag draft">DRAFT</span>
+    <span class="av" style="background:#8D5BFF">N</span><span class="av" style="background:#F64ADA">J</span><span class="av" style="background:#D7FF41;box-shadow:0 0 0 2px var(--ink0),0 0 0 4px var(--text)">T</span>
+  </div>
+  <ul>
+    <li><strong>Chip</strong> (<code>TKChip</code>): a choice or a quick request. May carry a credit cost in yellow.</li>
+    <li><strong>Tag</strong> (<code>TKTag</code>): a fact about something, never tappable. Tones: plain, glass, live.</li>
+    <li><strong>Avatar</strong> (<code>TKAvatar</code>): an initial on the person's colour. A ring marks the creator or a live friend.</li>
+  </ul>
+
+  <h3>Segmented control, note, card, toast</h3>
+  <div class="stage">
+    <div class="seg"><button class="on" type="button">Everyone</button><button type="button">Friends</button><button type="button">Only me</button></div>
+    <div class="ainote">✦ This sounds like a <b>stacking game</b>, in the <b>Neon Nights</b> look.</div>
+    <div class="card" style="width:220px"><b>ravi dared you</b><br><span style="color:var(--text3)">Beat 12 · 2 days left</span></div>
+    <span class="toast">✓ Posted to your feed</span>
+  </div>
+  <ul>
+    <li><strong>Segmented</strong> (<code>TKSegmented</code>): two to four exclusive options.</li>
+    <li><strong>Note</strong> (<code>TKNote</code>): the app explaining itself. Violet when it is about making.</li>
+    <li><strong>Card</strong> (<code>.tkCard()</code>): groups related content. Use it to set one thing apart, not on every block.</li>
+    <li><strong>Toast</strong> (<code>TKToast.show</code>): confirms what just happened, in the past tense, for two seconds.</li>
+    <li><strong>Number</strong> (<code>TKNumber</code>): a value that rolls when it changes. <strong>Sheet</strong> (<code>.tkSheet()</code>): the standard bottom sheet.</li>
+  </ul>
+
+  <h3>Tab bar <code>TKTabBar</code></h3>
+  <div class="stage">
+    <div class="tabbar"><span class="on">Arcade</span><span>Live</span><span class="plus">+</span><span>Squad</span><span>You</span></div>
+  </div>
+  <p>Five places, the create button in the middle on the prism gradient. The selected tab has a lime bar above it and a filled icon. The bar hides during a run.</p>
+</section>
+
+<hr>
+
+<section id="hud">
+  <div class="part">Game interface</div>
+  <h2>The HUD standard</h2>
+  <p class="lead">Every game looks different. The interface over it does not. A player who has played one Amigos game already knows where to look and where to put their thumbs in the next.</p>
+  <p>The layer over a game is called the HUD (heads-up display). This standard fixes where each kind of information and control goes. Any person or AI building a game follows it exactly. If a game needs something the standard does not allow, the game changes, not the layout.</p>
+  <ol>
+    <li><strong>The game owns the picture. The app owns the HUD.</strong> A game never draws its own score, lives, timer, exit or messages.</li>
+    <li><strong>Every kind of information has one fixed slot.</strong></li>
+    <li><strong>Controls live in one zone, at the bottom, under the thumbs.</strong></li>
+    <li><strong>The play field keeps at least 60% of the screen height.</strong></li>
+    <li><strong>A slot that is not needed stays empty.</strong> Nothing else moves into it.</li>
+  </ol>
+  <div class="hudwrap">
+    <div class="hud">
+      <svg viewBox="0 0 402 874" role="img" aria-label="Diagram of the HUD zones on a phone screen">
+        <rect x="1" y="1" width="400" height="872" rx="54" fill="#13141C" stroke="rgba(255,255,255,.24)" stroke-width="2"/>
+        <rect x="138" y="14" width="126" height="36" rx="18" fill="#0A0B10"/>
+        <g font-family="Inter, sans-serif" font-size="12" font-weight="700">
+          <rect x="16" y="66" width="370" height="44" rx="8" fill="rgba(215,255,65,.10)" stroke="#D7FF41" stroke-dasharray="5 4"/>
+          <text x="24" y="93" fill="#D7FF41">A  Exit · stat</text><text x="201" y="93" fill="#F4F3EE" text-anchor="middle" font-size="15">SCORE</text><text x="378" y="93" fill="#F64ADA" text-anchor="end">lives</text>
+          <rect x="16" y="122" width="370" height="46" rx="8" fill="rgba(215,255,65,.10)" stroke="#D7FF41" stroke-dasharray="5 4"/>
+          <text x="24" y="150" fill="#D7FF41">B  Progress strip</text>
+          <rect x="0" y="172" width="402" height="608" fill="rgba(255,255,255,.03)" stroke="#A6A8B8" stroke-dasharray="5 4"/>
+          <rect x="101" y="178" width="200" height="34" rx="17" fill="rgba(255,224,122,.12)" stroke="#FFE07A" stroke-dasharray="5 4"/>
+          <text x="201" y="200" fill="#FFE07A" text-anchor="middle">C  Callout</text>
+          <rect x="282" y="194" width="104" height="138" rx="22" fill="rgba(246,74,218,.12)" stroke="#F64ADA" stroke-dasharray="5 4"/>
+          <text x="334" y="262" fill="#F64ADA" text-anchor="middle">D  Camera</text>
+          <text x="201" y="440" fill="#C9CAD6" text-anchor="middle" font-size="16">E  Play field</text>
+          <text x="201" y="460" fill="#A6A8B8" text-anchor="middle" font-weight="500">the game</text>
+          <rect x="24" y="580" width="177" height="200" fill="rgba(24,207,244,.10)" stroke="#18CFF4" stroke-dasharray="5 4"/>
+          <rect x="201" y="580" width="177" height="200" fill="rgba(24,207,244,.10)" stroke="#18CFF4" stroke-dasharray="5 4"/>
+          <text x="112" y="676" fill="#18CFF4" text-anchor="middle">F  Move</text><text x="290" y="676" fill="#18CFF4" text-anchor="middle">F  Act</text>
+          <circle cx="92" cy="716" r="34" fill="none" stroke="#18CFF4" stroke-opacity=".5"/><circle cx="322" cy="722" r="28" fill="none" stroke="#18CFF4" stroke-opacity=".5"/><circle cx="262" cy="668" r="20" fill="none" stroke="#18CFF4" stroke-opacity=".5"/>
+          <rect x="16" y="788" width="370" height="44" rx="8" fill="rgba(215,255,65,.10)" stroke="#D7FF41" stroke-dasharray="5 4"/>
+          <text x="24" y="815" fill="#D7FF41">G  Audience</text><text x="378" y="815" fill="#D7FF41" text-anchor="end">sound · rec</text>
+        </g>
+        <rect x="134" y="858" width="134" height="5" rx="2.5" fill="#A6A8B8"/>
+      </svg>
+    </div>
+    <div>
+      <div class="wide"><table style="min-width:0">
+        <tr><th>Zone</th><th>Position</th></tr>
+        <tr><td>A Status row</td><td>safe top + 4, 44 high</td></tr>
+        <tr><td>B Progress strip</td><td>safe top + 60, 46 high</td></tr>
+        <tr><td>C Callout</td><td>safe top + 116, 34 high</td></tr>
+        <tr><td>D Camera dock</td><td>safe top + 132, 104 × 138</td></tr>
+        <tr><td>E Play field</td><td>safe top + 110 to safe bottom − 60</td></tr>
+        <tr><td>F Control zone</td><td>lowest 200 of the play field</td></tr>
+        <tr><td>G Bottom bar</td><td>safe bottom − 52, 44 high</td></tr>
+      </table></div>
+      <p class="cap" style="margin-top:12px">Side margin for every zone: 16. "Safe top" and "safe bottom" are the device's safe-area edges, so this holds on every iPhone. In code the numbers live in <code>TKHud</code> (<code>GameHUD.swift</code>) and must be read from there.</p>
+      <p class="cap" style="margin-top:8px">The app can draw these outlines over a real run. The switch is hidden: You tab, palette button, bottom of the page, "Show game interface zones". The <a href="#facecam">face cam screenshot</a> shows it on.</p>
+    </div>
+  </div>
+</section>
+
+<section id="slots">
+  <h2>Slots</h2>
+  <h3>A. Status row</h3>
+  <div class="wide"><table>
+    <tr><th>Slot</th><th>Width</th><th>Content</th><th>Rules</th></tr>
+    <tr><td>Exit</td><td>44</td><td>Close button</td><td>Always present, always top left. Leaves the run.</td></tr>
+    <tr><td>Left stat</td><td>up to 48</td><td>Time left, level or combo</td><td>Optional. One value. <span class="pill notbuilt">Not built</span></td></tr>
+    <tr><td>Score</td><td>the rest</td><td>The one number the run is about</td><td>Always present. Display font, 44, shrinks to 28. No label.</td></tr>
+    <tr><td>Right stat</td><td>up to 76</td><td>Lives, ammo or moves</td><td>Optional. Up to 3 icons, else an icon and a number. Lost units dim.</td></tr>
+  </table></div>
+  <p>A timer always goes left, even with no lives. The right slot is only for things you lose or spend. Never two values in one slot.</p>
+  <h3>B. Progress strip</h3>
+  <p>One bar: how far you are, and who is next. Fill grows with your score; full width is the top score. Ticks mark other players, friends in cyan. Left caption is the gap to the next person, in lime. Right caption is the top score, in yellow. A game cannot hide it or use it for anything else, such as health or a boss bar.</p>
+  <h3>C. Callout</h3>
+  <p>Short feedback: "Passed ravi", "Perfect", "New best". One pill, one line, 24 characters at most, 1.5 seconds at most, one at a time. It never takes touches.</p>
+  <h3>D. Camera dock</h3>
+  <p>The face cam bubble, 104 × 138, top right of the play field. The player can drag it anywhere in the play field except the control zone. A game keeps nothing essential fixed underneath it.</p>
+  <h3>E. Play field</h3>
+  <p>The game's picture fills the whole screen behind the HUD. What the player must see to play stays inside the play field. Labels that belong to an object in the game (a damage number over an enemy) are allowed; they must not repeat HUD information.</p>
+  <h3>G. Bottom bar</h3>
+  <p>Left: who is watching, never tappable. Right: at most two 44-point utilities (sound first), then the recording indicator. No game controls, no score, no game messages.</p>
+  <h3>Things that appear in the middle</h3>
+  <div class="wide"><table>
+    <tr><th>Overlay</th><th>Where</th><th>How long</th></tr>
+    <tr><td>"Go" or a countdown</td><td>Centre of the play field</td><td>0.7 s; a 3-2-1 count is allowed</td></tr>
+    <tr><td>Control hint</td><td>Centre of the control zone</td><td>2.5 s on a first run of a game type <span class="pill notbuilt">Not built</span></td></tr>
+    <tr><td>Run over card</td><td>Centre of the screen, 28 margin</td><td>Until the player chooses. "Again" is first.</td></tr>
+  </table></div>
+  <p>Only one at a time. There is no pause menu: runs are short, and leaving is the Exit button.</p>
+</section>
+
+<section id="controls">
+  <h2>Controls</h2>
+  <p>The control zone is the only place for on-screen controls. It is split down the middle: <strong>movement on the left, actions on the right</strong>. A left-handed setting mirrors the halves.</p>
+  <div class="wide"><table>
+    <tr><th>Part</th><th class="num">Size</th><th>Rule</th></tr>
+    <tr><td>Stick base / knob</td><td class="num">120 / 56</td><td>Left half only</td></tr>
+    <tr><td>Primary action</td><td class="num">72</td><td>Nearest the bottom-right corner; may be lime</td></tr>
+    <tr><td>Secondary action</td><td class="num">56</td><td>Above and to the left of the primary</td></tr>
+    <tr><td>Any control</td><td class="num">≥ 44</td><td>At least 24 from the side edges; translucent glass</td></tr>
+  </table></div>
+  <p>A game picks exactly one scheme from this list and does not invent its own. Use the first one in the list the game can be played with.</p>
+  <div class="wide"><table>
+    <tr><th>Scheme</th><th>The player</th><th>Visible controls</th><th>Good for</th></tr>
+    <tr><td><code>tapAnywhere</code></td><td>Taps anywhere</td><td>None</td><td>Stack, jump, timing <span class="pill built">Used by Stack</span></td></tr>
+    <tr><td><code>dragAnywhere</code></td><td>Drags; the character follows the movement</td><td>None</td><td>Dodge, catch, steer <span class="pill built">Used by Dodge</span></td></tr>
+    <tr><td><code>swipe</code></td><td>Swipes in four directions</td><td>None</td><td>Lane runners, sliding puzzles</td></tr>
+    <tr><td><code>direct</code></td><td>Touches the game's own pieces</td><td>None</td><td>Puzzles, matching</td></tr>
+    <tr><td><code>leftRight</code></td><td>Holds a left or right button</td><td>One button in each half</td><td>Racing</td></tr>
+    <tr><td><code>stick</code></td><td>Steers with a stick</td><td>Stick, left</td><td>Free movement</td></tr>
+    <tr><td><code>stickAndAction</code></td><td>Steers and fires or jumps</td><td>Stick left, one or two buttons right</td><td>Shooters, platformers</td></tr>
+    <tr><td><code>answers</code></td><td>Picks an answer</td><td>2 to 4 full-width buttons</td><td>Quiz</td></tr>
+  </table></div>
+  <p>Gesture schemes come first because they keep the picture clear and need no learning. Visible controls are defined here but <span class="pill notbuilt">Not built</span>.</p>
+  <h3>Layers, back to front</h3>
+  <ol>
+    <li>Backdrop (the look's gradient and light)</li>
+    <li>The game</li>
+    <li>Dark fades behind the top and bottom bands</li>
+    <li>HUD: status row, progress strip, bottom bar</li>
+    <li>Controls</li>
+    <li>Camera bubble</li>
+    <li>Callouts, "Go", hints</li>
+    <li>Run over card</li>
+    <li>App messages</li>
+  </ol>
+  <p>A game only ever draws in layers 1 and 2. The HUD uses the design system's colours and type, never the game's look.</p>
+</section>
+
+<section id="limits">
+  <h2>Limits and checklist</h2>
+  <div class="two">
+    <div class="card do"><b>Hard limits</b>
+      <ul style="margin-top:8px">
+        <li>Nothing above safe top or below safe bottom.</li>
+        <li>Nothing permanent in the play field except the camera bubble and controls.</li>
+        <li>Play field never under 60% of screen height.</li>
+        <li>At most 4 values: score, two stats, the progress strip.</li>
+        <li>At most 3 controls: one stick, two buttons.</li>
+        <li>Touch targets at least 44 × 44. Text at least 12.</li>
+        <li>One callout and one centre overlay at a time.</li>
+        <li>HUD positions never move during a run.</li>
+      </ul></div>
+    <div class="card dont"><b>A game must not</b>
+      <ul style="margin-top:8px">
+        <li>Draw its own score, lives, timer, exit, pause or game-over screen.</li>
+        <li>Place controls outside the control zone.</li>
+        <li>Hide, move, resize or recolour a HUD slot.</li>
+        <li>Use the progress strip for anything but progress against players.</li>
+        <li>Shake, flash or blur the HUD. Shake applies to the game only.</li>
+        <li>Require the phone to be rotated.</li>
+      </ul></div>
+  </div>
+  <h3>What a game tells the HUD</h3>
+  <div class="wide"><table>
+    <tr><th>Value</th><th>Required</th><th>Shown in</th></tr>
+    <tr><td><code>score</code></td><td>Yes</td><td>Score slot, progress strip</td></tr>
+    <tr><td><code>over</code></td><td>Yes</td><td>Triggers the run over card</td></tr>
+    <tr><td><code>lives</code> (or ammo, moves)</td><td>No</td><td>Right stat</td></tr>
+    <tr><td><code>timeLeft</code>, <code>level</code> or <code>combo</code></td><td>No</td><td>Left stat</td></tr>
+    <tr><td><code>callout(text)</code></td><td>No</td><td>Callout slot</td></tr>
+    <tr><td><code>controlScheme</code></td><td>Yes</td><td>Decides what the control zone shows</td></tr>
+  </table></div>
+  <h3>Before a game ships</h3>
+  <ul class="checks">
+    <li>The game draws no numbers or text that repeat the HUD.</li>
+    <li>One control scheme from the list, and it is the simplest one that works.</li>
+    <li>The player's character and the next threat are always visible inside the play field.</li>
+    <li>Nothing essential sits under the camera dock or, with visible controls, in the control zone.</li>
+    <li>Played on the smallest phone (375 × 667): nothing overlaps; play field still 60% or more.</li>
+    <li>Played over the lightest and darkest look: the HUD reads on both.</li>
+    <li>Time or level is on the left; things you lose are on the right.</li>
+  </ul>
+</section>
+
+<hr>
+
+<section id="architecture">
+  <div class="part">Technical</div>
+  <h2>Architecture</h2>
+  <p>A native iPhone app. SwiftUI for the interface, SpriteKit for the games, iOS 17 or later, no third-party dependencies.</p>
+  <pre><code>ios/
+  project.yml            XcodeGen spec; the .xcodeproj is generated from it
+  run-on-iphone.sh       Build, install and launch on a connected iPhone
+  Tools/make-icon.swift  Draws the app icon
+  AmigosDS/              Design system package
+    Tokens  Typography  Motion  Icons  GameHUD  Components/
+  Amigos/
+    AmigosApp.swift      Entry point
+    Model/   GameDNA  Data (sample people and games)  Store (app state)
+    Game/    GameScene  DodgeScene  StackScene  GameAudio  FaceCam
+    Screens/ RootView  SplashView  FeedView  ReelView  HudView  ResultView
+             CreateFlow  LiveView  SocialViews  SystemView</code></pre>
+  <ul>
+    <li><strong>The design system is its own Swift package</strong>, so it can change without touching the app. Everything in it is prefixed <code>TK</code>.</li>
+    <li><strong>State</strong> is one observable object, <code>Store</code>, passed through the SwiftUI environment: games, likes, follows, best scores, credits, the selected tab, whether a run owns the screen, and what is being presented.</li>
+    <li><strong>Saved between launches:</strong> posted runs (videos plus <code>reels.json</code> in <code>Documents/Clips</code>) and a few settings (<code>soundOff</code>, <code>faceCamOn</code>, <code>liveJoined</code>, <code>liveHintSeen</code>, <code>lastSplash</code>, <code>hudGuide</code>). Everything else resets.</li>
+    <li>Setting keys must not contain dots; a dotted key made a setting stop updating.</li>
+  </ul>
+</section>
+
+<section id="dna">
+  <h2>Game DNA</h2>
+  <p>A game is a small value, not code. The create flow edits it, the engine draws it, and the sound is derived from it.</p>
+  <pre><code>struct GameDNA {
+    var template: Template   // .dodge or .stack
+    var look: LookID         // colour and light: space, candy, neon, sunset, crt, ice, mono
+    var hazard: HazardKind   // what falls: taco, meteor, drop
+    var speed: Double        // 1 is normal
+    var lives: Int
+}</code></pre>
+  <p><strong>Why it matters.</strong> The App Store does not allow apps to download and run new code. Because a generated game is only data rendered by templates already in the app, nothing executable is downloaded. It also keeps every generated game playable: the AI can only choose among things the engine knows how to run.</p>
+  <p><strong>To add a game type:</strong> add a case to <code>Template</code>, write a <code>GameScene</code> subclass, return it from <code>GameView.make()</code>, and pick its control scheme from the <a href="#controls">list</a>.</p>
+</section>
+
+<section id="engine">
+  <h2>Engine and sound</h2>
+  <ul>
+    <li><strong><code>GameScene</code></strong> is the shared base. It owns the loop, two modes and reporting. <strong>Demo mode</strong> is what the feed shows: the game plays itself, silently. <strong>Play mode</strong> is a real run. Switching mode resets the run.</li>
+    <li><strong><code>GameView</code></strong> is the SwiftUI wrapper. The same view serves the feed preview and the run, which is why tapping Play feels like a change of state and not a change of screen.</li>
+    <li><strong>Only the visible card runs.</strong> Each scene runs for half a second when created, so a paused card still shows a real frame.</li>
+    <li><strong>Reporting.</strong> A scene writes score, lives and "over" to a <code>GameSession</code>. The interface observes it. Score updates are limited to about 14 a second; lives and game over are sent at once.</li>
+    <li><strong>The backdrop</strong> (gradient and glows) is drawn in SwiftUI under a transparent SpriteKit view.</li>
+    <li><strong><code>GameAudio</code></strong> builds each sound from sine, triangle, square, saw, glass and noise layers, with an attack, a decay and an optional pitch sweep. Results are cached and prepared before a run so the first hit is instant.</li>
+  </ul>
+</section>
+
+<section id="recording">
+  <h2>Recording</h2>
+  <p><code>FaceCam</code> films the player and saves a run as one video.</p>
+  <ul>
+    <li>The front camera (<code>AVCaptureSession</code>, video only) is shown in the bubble.</li>
+    <li>ReplayKit (<code>RPScreenRecorder</code>) records the app's screen with the microphone on. Because the bubble is on screen, the face is in the picture. Game sound is captured as app audio.</li>
+    <li>Recording starts <strong>before</strong> the run, so a permission prompt never covers a running game.</li>
+    <li>While recording, audio switches from ambient to play-and-record, so the silent switch is ignored during a filmed run.</li>
+    <li>The file is checked after saving; an empty result (as on the simulator) is reported as a failure, not shown as a clip.</li>
+    <li>Leaving a run early throws the recording away.</li>
+  </ul>
+  <p>A posted run is a <code>Reel</code>: the clip's file name, the game, the score and the date. The feed lists reels first, then games.</p>
+  <div class="note"><b>The known trade-off.</b> Recording the screen was the fastest way to test the idea. Its limits: the clip is exactly what the screen showed, HUD included, and iOS re-asks for recording permission from time to time. A custom recorder that composes camera frames and game frames itself would lift both and allow a clean showreel. That is the next step if the idea holds up.</div>
+</section>
+
+<section id="project">
+  <h2>Project and build</h2>
+  <div class="wide"><table>
+    <tr><th>To do this</th><th>Run this</th></tr>
+    <tr><td>Regenerate the Xcode project</td><td><code>cd ios &amp;&amp; xcodegen generate</code></td></tr>
+    <tr><td>Open it</td><td><code>open ios/Amigos.xcodeproj</code></td></tr>
+    <tr><td>Install on a connected iPhone</td><td><code>ios/run-on-iphone.sh</code></td></tr>
+    <tr><td>Redraw the app icon</td><td><code>swift ios/Tools/make-icon.swift ios/Amigos/Assets.xcassets/AppIcon.appiconset</code></td></tr>
+  </table></div>
+  <ul>
+    <li>Repository: <code>github.com/odaydesign/amigos</code> (private), branch <code>main</code>.</li>
+    <li>Bundle ID: <code>odaydesign.Amigos</code>.</li>
+    <li>The written docs are in <code>docs/</code>: STATUS, PRODUCT, ARCHITECTURE, DESIGN-SYSTEM, GAME-INTERFACE, DECISIONS. <code>CLAUDE.md</code> at the root gives AI assistants the rules to follow.</li>
+    <li>The first build was a web prototype (<code>src/</code>, <code>design-system/</code>). It is kept for reference and no longer maintained.</li>
+  </ul>
+</section>
+
+<hr>
+
+<section id="status">
+  <div class="part">Where it stands</div>
+  <h2>Status</h2>
+  <div class="wide"><table>
+    <tr><th>Area</th><th>State</th><th>Notes</th></tr>
+    <tr><td>Feed, play, run interface</td><td><span class="pill built">Built</span></td><td>Five sample games; two game types.</td></tr>
+    <tr><td>Create flow</td><td><span class="pill built">Built</span></td><td>Real flow and a real playable result; generation is simulated.</td></tr>
+    <tr><td>Live, Squad</td><td><span class="pill sample">Sample data</span></td><td>Scripted, no real people.</td></tr>
+    <tr><td>Loading screens</td><td><span class="pill built">Built</span></td><td>Six styles.</td></tr>
+    <tr><td>Sound and haptics</td><td><span class="pill unchecked">Unchecked</span></td><td>Run without errors; feel not confirmed.</td></tr>
+    <tr><td>Face cam, posting a run</td><td><span class="pill unchecked">Unchecked</span></td><td>Needs a real phone to confirm the clip.</td></tr>
+    <tr><td>Result, comments, look picker, ReCade</td><td><span class="pill unchecked">Unchecked</span></td><td>Compile; not reopened in the native app.</td></tr>
+    <tr><td>Other screen sizes, VoiceOver, Dynamic Type</td><td><span class="pill unchecked">Unchecked</span></td><td>One simulator size and one phone only.</td></tr>
+    <tr><td>Accounts, saving, real friends and scores</td><td><span class="pill notbuilt">Not built</span></td><td>No server.</td></tr>
+    <tr><td>Real AI generation</td><td><span class="pill notbuilt">Not built</span></td><td></td></tr>
+    <tr><td>Jump, Race, Solve, Quiz</td><td><span class="pill notbuilt">Not built</span></td><td>Shown as "Soon".</td></tr>
+    <tr><td>Visible controls, left stat, control hint</td><td><span class="pill notbuilt">Not built</span></td><td>Defined in the HUD standard.</td></tr>
+    <tr><td>Live streaming, multiplayer lobby, search, voice input, notifications</td><td><span class="pill notbuilt">Not built</span></td><td></td></tr>
+    <tr><td>Onboarding, failed build, out of credits</td><td><span class="pill notbuilt">Not built</span></td><td>Designed on the canvas only.</td></tr>
+  </table></div>
+</section>
+
+<section id="decisions">
+  <h2>Open decisions</h2>
+  <ol>
+    <li><strong>The name.</strong> Amigos is in use but was never checked for trademarks, App Store conflicts or domains. It is a common word, so expect conflicts.</li>
+    <li><strong>Words for a game and a remix.</strong> "Cade" and "ReCade" came from the old name.</li>
+    <li><strong>Bundle ID.</strong> Settle it before any App Store work; changing it later makes a new app.</li>
+    <li><strong>Credits.</strong> Pack prices, the refill rule, and whether creators earn credits.</li>
+    <li><strong>Loading screen length.</strong> 2.6 seconds on every launch could be shorter, or once a day.</li>
+    <li><strong>Tab bar while watching live.</strong> Hiding it would give the game the whole screen.</li>
+    <li><strong>The recorder.</strong> Keep screen recording, or build the custom one for a clean showreel and live streaming.</li>
+    <li><strong>Multiplayer and spectating.</strong> The original brief places both after the first release.</li>
+  </ol>
+</section>
+
+</div></main>
+</div>
+
+<script>
+// Highlight the section being read in the contents rail.
+(function () {
+  var links = Array.prototype.slice.call(document.querySelectorAll('nav.rail a'));
+  var map = {};
+  links.forEach(function (a) { map[a.getAttribute('href').slice(1)] = a; });
+  if (!('IntersectionObserver' in window)) return;
+  var seen = new IntersectionObserver(function (entries) {
+    entries.forEach(function (e) {
+      if (!e.isIntersecting) return;
+      links.forEach(function (a) { a.classList.remove('on'); });
+      var a = map[e.target.id];
+      if (a) a.classList.add('on');
+    });
+  }, { rootMargin: '-10% 0px -80% 0px' });
+  document.querySelectorAll('section[id]').forEach(function (s) { seen.observe(s); });
+  // Segmented control demo
+  document.querySelectorAll('.seg').forEach(function (seg) {
+    seg.addEventListener('click', function (e) {
+      if (e.target.tagName !== 'BUTTON') return;
+      seg.querySelectorAll('button').forEach(function (b) { b.classList.remove('on'); });
+      e.target.classList.add('on');
+    });
+  });
+})();
+</script>
