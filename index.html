@@ -9,7 +9,7 @@
 <meta charset="utf-8">
 <title>Amigos Handbook</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Funnel+Display:wght@500;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
 <style>
 /* Layout: a fixed contents rail on the left, one long reading column on the right.
    Single dark theme on purpose: the page documents a dark product and shows its
@@ -22,7 +22,7 @@
   --lime: #D7FF41; --pink: #F64ADA; --violet: #8D5BFF; --violet-soft: #C7B5FF;
   --cyan: #18CFF4; --yellow: #FFE07A; --mint: #A8F6B7; --on-accent: #0A0B10;
   --prism: linear-gradient(45deg, #7A59F9 0%, #F64ADA 30%, #FFE07A 55%, #D7FF41 78%, #A8F6B7 100%);
-  --display: "Bricolage Grotesque", "Arial Black", system-ui, sans-serif;
+  --display: "Funnel Display", "Arial Black", system-ui, sans-serif;
   --body: Inter, -apple-system, "Segoe UI", system-ui, sans-serif;
   --mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
   --rail: 248px;
@@ -127,7 +127,9 @@ img.full { width: 100%; border-radius: 16px; border: 1px solid var(--line); }
 .tabbar { display: flex; align-items: center; justify-content: space-around; background: var(--ink0); border-top: 1px solid var(--line); height: 58px; width: 100%; max-width: 370px; font: 600 11px var(--body); color: var(--text3); }
 .tabbar span.on { color: var(--text); box-shadow: inset 0 3px 0 var(--lime); padding-top: 22px; }
 .tabbar span { padding-top: 22px; }
-.tabbar .plus { width: 58px; height: 40px; border-radius: 14px; background: var(--prism); color: var(--on-accent); display: grid; place-items: center; font: 800 22px var(--display); padding: 0; }
+.tabbar .plus { width: 58px; height: 40px; border-radius: 14px; background: repeating-linear-gradient(45deg, #7A59F9 0, #F64ADA 20%, #FFE07A 40%, #D7FF41 60%, #A8F6B7 80%, #7A59F9 100%); background-size: 200% 200%; animation: prism-flow 6s linear infinite; color: var(--on-accent); display: grid; place-items: center; font: 800 22px var(--display); padding: 0; }
+@keyframes prism-flow { from { background-position: 100% 0; } to { background-position: 0 100%; } }
+@media (prefers-reduced-motion: reduce) { .tabbar .plus { animation: none; } }
 
 .type-row { display: grid; grid-template-columns: 110px minmax(0,1fr); gap: 14px; align-items: baseline; padding: 10px 0; border-bottom: 1px solid var(--line); }
 .type-row span { font: 12px var(--mono); color: var(--text3); }
@@ -463,7 +465,7 @@ img.full { width: 100%; border-radius: 16px; border: 1px solid var(--line); }
 
 <section id="type">
   <h2>Type</h2>
-  <p>Two faces. <strong>Bricolage Grotesque</strong> (weight 800, bundled as a variable font, SIL Open Font License) for titles, scores and main buttons. The <strong>iOS system font</strong> for everything you read. This page uses Inter in its place.</p>
+  <p>Two faces. <strong>Funnel Display</strong> (weight 800, bundled as a variable font, SIL Open Font License) for titles, scores and main buttons. The <strong>iOS system font</strong> for everything you read. This page uses Inter in its place.</p>
   <div>
     <div class="type-row"><span>score · 88</span><div style="font:800 clamp(52px,12vw,88px)/1 var(--display);letter-spacing:-2.6px">1,460</div></div>
     <div class="type-row"><span>hero · 44</span><div style="font:800 44px/1.05 var(--display);letter-spacing:-1.3px">Taco Storm</div></div>
@@ -648,7 +650,7 @@ img.full { width: 100%; border-radius: 16px; border: 1px solid var(--line); }
   <div class="stage">
     <div class="tabbar"><span class="on">Arcade</span><span>Live</span><span class="plus">+</span><span>Squad</span><span>You</span></div>
   </div>
-  <p>Five places, the create button in the middle on the prism gradient. The selected tab has a lime bar above it and a filled icon. The bar hides during a run.</p>
+  <p>Five places, the create button in the middle on the prism gradient, whose colours drift slowly (one round every 6 seconds, still with Reduce Motion). The selected tab has a lime bar above it and a filled icon. The bar hides during a run.</p>
 </section>
 
 <hr>
